@@ -1,0 +1,4 @@
+pytest
+Selenium
+allure-pytest
+pyautogui
