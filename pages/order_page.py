@@ -1,10 +1,10 @@
+import allure
 import pyautogui
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EX
+from .base_page import BasePage
 
 
-class OrderPage:
+class OrderPage(BasePage):
     FIRST_NAME = (By.XPATH, "//input[@placeholder='* Имя']")
     LAST_NAME = (By.XPATH, "//input[@placeholder='* Фамилия']")
     ADDRESS = (By.XPATH, "//input[@placeholder='* Адрес: куда привезти заказ']")
@@ -19,30 +19,24 @@ class OrderPage:
     CONFIRM_BUTTON = (By.XPATH, "(//button[contains(text(), 'Да')])[1]")
     SUCCESS_POPUP = (By.XPATH, "//div[text()='Заказ оформлен']")
 
-    def __init__(self, driver):
-        self.driver = driver
-
-    def fill_order_form(self, first_name, last_name, address, metro, phone, date, rental_period, color, comment):
-        self.driver.find_element(*self.FIRST_NAME).send_keys(first_name)
-        self.driver.find_element(*self.LAST_NAME).send_keys(last_name)
-        self.driver.find_element(*self.ADDRESS).send_keys(address)
-        self.driver.find_element(*self.METRO_STATION).send_keys(metro)
+    @allure.step("Заполняем форму заказа")
+    def fill_order_form(self, first_name, last_name, address, metro, phone, date, rental_period, comment):
+        self.send_keys(self.FIRST_NAME, first_name)
+        self.send_keys(self.LAST_NAME, last_name)
+        self.send_keys(self.ADDRESS, address)
+        self.send_keys(self.METRO_STATION, metro)
         pyautogui.press("down")
         pyautogui.press("enter")
-        self.driver.find_element(*self.PHONE_NUMBER).send_keys(phone)
-        self.driver.find_element(*self.NEXT_BUTTON).click()
-        WebDriverWait(self.driver, 3).until(
-            EX.presence_of_element_located(self.DATE)
-        )
-        self.driver.find_element(*self.DATE).send_keys(date)
-        self.driver.find_element(*self.RENTAL_PERIOD).click()
-        self.driver.find_element(By.XPATH, f"//div[text()='{rental_period}']").click()
-        self.driver.find_element(*self.COLOR).click()
-        self.driver.find_element(*self.COMMENT).send_keys(comment)
-        self.driver.find_element(*self.ORDER_BUTTON).click()
-        self.driver.find_element(*self.CONFIRM_BUTTON).click()
+        self.send_keys(self.PHONE_NUMBER, phone)
+        self.click_element(self.NEXT_BUTTON)
+        self.send_keys(self.DATE, date)
+        self.click_element(self.RENTAL_PERIOD)
+        self.click_element((By.XPATH, f"//div[text()='{rental_period}']"))
+        self.click_element(self.COLOR)
+        self.send_keys(self.COMMENT, comment)
+        self.click_element(self.ORDER_BUTTON)
+        self.click_element(self.CONFIRM_BUTTON)
 
+    @allure.step("Проверяем отображение сообщения об успешном заказе")
     def is_success_popup_present(self):
-        return WebDriverWait(self.driver, 3).until(
-            EX.presence_of_element_located(self.SUCCESS_POPUP)
-        ).is_displayed()
+        return self.find_element(self.SUCCESS_POPUP) is not None
